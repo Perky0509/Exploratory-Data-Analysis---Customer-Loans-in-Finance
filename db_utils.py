@@ -22,7 +22,7 @@ class RDSDatabaseConnector:
     
     #This method uses SQLAlchemy and the RDS to connect to the db
     def initialise_engine(self):
-       engine = create_engine('postgresql://loansanalyst:EDAloananalyst@eda-projects.cq2e8zno855e.eu-west-1.rds.amazonaws.com:5432/payments')
+       engine = create_engine('')
        engine.connect()
 
     #Extracting the table we need from the RDS db and using Pandas to view it
