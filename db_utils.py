@@ -4,15 +4,16 @@ from sqlalchemy import create_engine
 from sqlalchemy import URL
 import yaml
 
+def open_yaml_credentials():
+    with open('./credentials.yaml', 'r') as file:
+            dictionary_of_credentials = yaml.safe_load(file) 
+            return dictionary_of_credentials 
 
 """this is a class that allows us to extract the data we need to our EDA"""
 class RDSDatabaseConnector:
  
     #This is to return the credentials dictionary necessary to create the SQLAlchemy 
-    def open_yaml_credentials():
-        with open('./credentials.yaml', 'r') as file:
-                dictionary_of_credentials = yaml.safe_load(file)    
- 
+    
     def __init__(self, dictionary_of_credentials):  
          self.dictionary_of_credentials = dictionary_of_credentials
          self.open_yaml_credentials = open_yaml_credentials()
@@ -40,9 +41,3 @@ class RDSDatabaseConnector:
 df = RDSDatabaseConnector(open_yaml_credentials())
 
 print(df.loan_payments_df_as_csv())
-
- 
-
-
-
-
