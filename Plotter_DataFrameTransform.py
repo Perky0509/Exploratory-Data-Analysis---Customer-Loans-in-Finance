@@ -1,9 +1,14 @@
+import csv
+import matplotlib.pyplot as plt
+%matplotlib inline
+import numpy as np
 import pandas as pd
 import plotly as px
+import seaborn as sns
+from scipy import stats
 import statsmodels.api as sm
-import matplotlib.pyplot as plt
-import numpy as np
-import csv
+from statsmodels.stats.outliers_influence import variance_inflation_factor 
+
 
 df_transform = pd.read_csv('loans_for_info.csv')
 
@@ -15,14 +20,13 @@ This will depend on how high the percentage is (if huge delete col, if not big, 
 percent_null_values = round(df_transform.isna().sum() / len(df_transform) * 100, 1) 
 #print(percent_null_values)
 
-
 #Because the columns with high, but under 65% nulls were key columns (eg next_payment_date - 60.1%) without other cols with similar purpose, the % required to be in this list is 65%
 cols = ['mths_since_last_delinq', 'mths_since_last_record']
 
 #remove columns that have a high % of null/missing vals. 
 def remove_cols(df_transform, cols : list):
     for col in cols:
-        test_df = df_transform.drop(col, axis= 1)    
+        df_transform = df_transform.drop(col, axis= 1)    
     return df_transform.info()
 remove_cols(df_transform, cols)
 
@@ -34,6 +38,10 @@ high_null_rows = percent_null_in_rows < 80
 print(high_null_rows.value_counts())
 #output = 0 so no rows to be deleted 
 
+#saving numeric columns as separate df
+numeric_cols = df_transform.select_dtypes(include='number')
+numeric_cols
+numeric_cols.to_csv('numeric_cols.csv')
 
 """Class to perform manipulations of the table in order to allow for clean and effective analysis. No rows are to be cut so the methods will be to remove columns and impute"""
 
@@ -58,7 +66,65 @@ class DataFrameTransform():
     def impute_median_data(self, cols: list):
         for col in cols:
             self.df[col] = self.df[col].fillna(self.df[col].median())
-        return self.df[col].info()       
+        return self.df[col].info()    
+
+     #log transformation 
+    def log_transformation_and_vis(self, col):
+        self.col = self.df[col]
+        np.random.seed(0)
+        data = self.col
+        data_log = np.log(self.col)
+        fig, axs = plt.subplots(nrows=1, ncols=2)
+        axs[0].hist(self.col, edgecolor='black')
+        axs[1].hist(data_log, edgecolor='black')
+        axs[0].set_title('Original Data')
+        axs[1].set_title('Log-Transformed Data')   
+    
+    #boxcox transformation   
+    def box_cox_transformation(self, col):
+        self.col = self.df[col]
+        plt.figure(figsize = (8, 8))
+        data = self.col
+        sns.displot(data)
+        plt.show()   
+        tdata = stats.boxcox(self.col.values.flatten())[0]
+        sns.displot(tdata)
+        plt.show()   
+
+    #here we remove any value outside a given range. For added visualisation a boxplot is printed before and after the deletion of the outliers.
+    def remove_outliers(self, col):
+        self.col = self.df[col]
+        sns.boxplot(self.col)
+        plt.show()
+        Q1 = self.col.quantile(0.25)
+        Q3 = self.col.quantile(0.75)
+        IQR = Q3 - Q1
+        self.col = self.df[(self.col >= Q1 - 1.5*IQR) & (self.col <= Q3 + 1.5*IQR)]
+        sns.boxplot(self.col)
+        plt.title('no_outliers')
+        plt.show()
+    
+loan_df = DataFrameTransform(df_transform)
+
+#median chosen because of the nature of the distributions
+median_cols = ['int_rate', 'last_payment_amount', 'collections_12_mths_ex_med', 'collections_12_mths_ex_med', 'mths_since_last_major_derog']
+print(loan_df.impute_median_data(median_cols))
+print(loan_df.box_cox_transformation('annual_inc'))
+print(loan_df.log_transformation_and_vis('annual_inc'))
+print(loan_df.remove_outliers(['total_rec_late_fee']))
+
+
+#using the numeric df created above to pass through a correlation matrix
+data_for_matrix = pd.read_csv('numeric_cols.csv').dropna()
+corr_matrix = data_for_matrix.corr().abs()
+corr_matrix
+#the level of high correlation is set to anything above 0.9
+high_corr = corr_matrix > 0.9
+print(high_corr)
+#using the results of the it is determined that the below columns should be dropped. 
+cols_to_drop = ['id', 'funded_amount', 'instalment', 'total_rec_int']
+transformed_loan_payments = df_transform.drop(cols_to_drop, axis=1)
+transformed_loan_payments.head()   
 
 loan_df = DataFrameTransform(df_transform)
 
@@ -68,7 +134,6 @@ print(loan_df.impute_mean_data(mean_cols))
 
 
 df_transform.to_csv('df_transform.csv')
-
 
 
 """now we move onto creating a class that illustrates the data tranformation with regards to imputing missing vals"""
@@ -84,12 +149,13 @@ class Plotter():
     def qq_plot(self, col : str): 
         self.col = self.df[col]
         self.qq_plott = sm.qqplot(self.col, scale= 1, line= 'q', fit=True)
-        pyplot.show()
+        plt.title('self.col')
+        plt.show()
 
-    def show_skew_plot(self, col: str):
-        self.col = col
-        self.df[self.col].hist(bins= 25)
-        print(f"The {self.col} column has a skew of {(self.df[self.col].skew())}")
+    def boxplot(self, col: str):
+        self.col = self.df[col]
+        self.boxplot = sns.boxplot(self.col)
+        plt.show()
 
 
 histogram = ['int_rate']
@@ -98,7 +164,7 @@ loan_df = Plotter(plotting)
 
 #testing code
 print(loan_df.qq_plot(['total_rec_late_fee']))
-print(loan_df.show_skew_plot('total_rec_late_fee'))
+print(loan_df.boxplot('total_rec_late_fee'))
 
 
 #saving a new csv copy
