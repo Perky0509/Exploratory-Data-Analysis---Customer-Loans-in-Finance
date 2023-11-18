@@ -47,7 +47,7 @@ To start with this is an overview of the skew of each variables
 
 
 
-This q-q plot shows that 'total payment inv' is heavily skewed.
+This q-q plot shows that 'total payment inv' is not normally distributed.
 
 
 
