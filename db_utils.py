@@ -101,7 +101,7 @@ loans = DataTransform(transformed_loan_payments)
 
 
 columns_to_round = ["funded_amount", "funded_amount_inv", "instalment", "total_rec_late_fee", "collection_recovery_fee", "last_payment_amount"]
-print(loans.number_rounding_2dp(columns_to_round))
+#print(loans.number_rounding_2dp(columns_to_round))
 
 categ_list = ['term', 'sub_grade', 'grade', 'home_ownership', 'verification_status', 'loan_status', 'payment_plan', 'purpose', 'application_type']
 print(loans.format_object_categorical(categ_list))
@@ -150,13 +150,6 @@ class DataFrameInfo():
     
 
 loan = DataFrameInfo(transformed_loan_payments)
-
-print(loan.df_dtypes())
-print(loan.statistical_info())
-categ_list = ['term', 'sub_grade', 'grade', 'home_ownership', 'verification_status', 'loan_status', 'payment_plan', 'purpose', 'application_type']
-print(loan.unique_categories(categ_list))
-print(loan.df_shape())
-print(loan.null_count())
 
 
 # ------------------------------------------------------------------------- Transforming Data Frame -------------------------------------------------------------------------- # 
@@ -259,23 +252,20 @@ loan_df = DataFrameTransform(transformed_loan_payments)
 #median chosen because of the nature of the distributions
 median_cols = ['int_rate', 'last_payment_amount', 'collections_12_mths_ex_med', 'collections_12_mths_ex_med', 'mths_since_last_major_derog']
 print(loan_df.impute_median_data(median_cols))
-print(loan_df.box_cox_transformation('annual_inc'))
-print(loan_df.log_transformation_and_vis('annual_inc'))
-print(loan_df.remove_outliers('dti'))
+
 
 #using the numeric df created above to pass through a correlation matrix
 data_for_matrix = pd.read_csv('numeric_cols.csv').dropna()
 corr_matrix = data_for_matrix.corr().abs()
-#corr_matrix
+corr_matrix
 
 #the level of high correlation is set to anything above 0.9
 high_corr = corr_matrix > 0.9
-#print(high_corr)
+high_corr #number of high correlations: 38
 
 #using the results of the it is determined that the below columns should be dropped. 
 cols_to_drop = ['id', 'total_rec_int', 'policy_code', 'application_type']
 transformed_loan_payments = transformed_loan_payments.drop(cols_to_drop, axis=1)
-transformed_loan_payments.head()
 
 # ------------------------------------------------------------------- Plotting Data Transformations ------------------------------------------------------------------- #
 
@@ -298,48 +288,36 @@ class Plotter():
 
 loan_df = Plotter(transformed_loan_payments)
 
-#testing code
-print(loan_df.qq_plot(['total_rec_late_fee']))
-print(loan_df.boxplot(['total_rec_late_fee']))
-
 
 # ------------------------------------------------------------- Current Status of Loans ------------------------------------------------------------------ #
-        
+    
 
 #percentage of loans "fully paid" overall:
 fully_paid = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Fully Paid')]
-len(fully_paid)
-#28021, so 51.67% 
+len(fully_paid) #28021, so 51.67% 
 
 
 #payment_inv : funding_inv
 ratio_of_funding_inv = round(transformed_loan_payments['total_payment_inv'] / transformed_loan_payments['funded_amount_inv'], 2)
 transformed_loan_payments['recovered_ratio_inv'] = ratio_of_funding_inv
-#percentage of overal loans amount recovered against the investor funding
-percentrage_repaid_inv = round(transformed_loan_payments['total_payment_inv'].sum() / transformed_loan_payments['funded_amount_inv'].sum() * 100, 2)
-percentrage_repaid_inv #91.02
 
-
+#checking with another method
 transformed_loan_payments['percentage_repaid_inv'] = round(transformed_loan_payments['total_payment_inv'] / transformed_loan_payments['funded_amount_inv'] * 100, 2)
 repaid_inv = transformed_loan_payments['percentage_repaid_inv'] >=1 
 paid_back_inv = repaid_inv.sum()
 percentage_repaid_on_inv = paid_back_inv / len(transformed_loan_payments) * 100 
-percentrage_repaid_inv #91.02
+percentage_repaid_on_inv #91.02
 
 #payment : funding 
 ratio_of_funding = round(transformed_loan_payments['total_payment'] / transformed_loan_payments['funded_amount'])
 transformed_loan_payments['recovered_ratio_total'] = ratio_of_funding
+
 #percentage of overal loans amount recovered against total amount funded 
-percentrage_repaid= round(transformed_loan_payments['total_payment'].sum() / transformed_loan_payments['funded_amount'].sum() *100, 2) 
-percentrage_repaid #96.66
 transformed_loan_payments['percentage_repaid_total'] = round(transformed_loan_payments['total_payment'] / transformed_loan_payments['funded_amount'] *100, 2)
 repaid_total = transformed_loan_payments['percentage_repaid_total'] >=1 
 paid_back_inv = repaid_total.sum()
 percentage_repaid_total = round(paid_back_inv / len(transformed_loan_payments) * 100, 2) 
 print(percentage_repaid_total) #94.42
-
-
-# -------------------------------------------------------------- Six Months Projection ------------------------------------------------------------------- #
 
 
 unique_loan_status = transformed_loan_payments['loan_status'].unique()
@@ -358,20 +336,23 @@ loan_status_histogram(transformed_loan_payments, "percentage_repaid_total", uniq
 #histogram to show inv amount repaid per loan status
 loan_status_histogram(transformed_loan_payments, "percentage_repaid_inv", unique_loan_status)
 
-#Subset
-customers_still_paying = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Current | Late | Grace')]
 
+# -------------------------------------------------------------- Six Months Projection ------------------------------------------------------------------- #
+
+#Subset
+relevant_customers = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains("Current|Late|Grace")]
+customers_still_paying = relevant_customers
 
 #calculating what the percentage of customers will have paid off their loan within 6m 
 customers_still_paying['paid_6m'] = round(((customers_still_paying["total_payment"] + (customers_still_paying["instalment"] * 6)) / customers_still_paying["funded_amount"]) * 100, 2)
-
+print(len(customers_still_paying['paid_6m']))
 
 paid_by_6m = customers_still_paying['paid_6m'] >= 1
 sum_of_paid_6m = paid_by_6m.sum()
-sum_of_paid_6m #249
+sum_of_paid_6m #19095
 
 total_percentage_paid_6m = round(sum_of_paid_6m / len(customers_still_paying) * 100, 2)
-total_percentage_paid_6m #93.96%
+total_percentage_paid_6m #94.44%
 
 #histogram how many of each currently paying loan status will have paid off the loan 
 def paid_6m_histogram(df, col):
@@ -386,6 +367,7 @@ paid_6m_histogram(customers_still_paying, "paid_6m")
 
 
 #------------------------------------------------------------- Charged Off % and Amount Paid -------------------------------------------------------------------------------#
+
 
 #percentage of charged-off loans historically; 
 tansformed_loan_payments = pd.read_csv('tansformed_loan_payments.csv')
@@ -453,7 +435,7 @@ potential_revenue_charged_off #£76,390,334.84
 # -------------------------------------------------------------------- Potential Loss ----------------------------------------------------------------------------------- #
 
 
-#finding the unique values in loan status
+#reminder of the unique values in loan status
 unique_loan_status
 """['Current', 'Fully Paid', 'Charged Off', 'Late (31-120 days)',
        'In Grace Period', 'Late (16-30 days)', 'Default',
@@ -508,16 +490,6 @@ loss_choff_late_default #6.02%
 
 # --------------------------------------------------------------------- Indicators of Loss ---------------------------------------------------------------------------------- #
 
- 
-#finding the unique values in loan status
-unique_loan_status = transformed_loan_payments['loan_status'].unique()
-unique_loan_status
-"""['Current', 'Fully Paid', 'Charged Off', 'Late (31-120 days)',
-       'In Grace Period', 'Late (16-30 days)', 'Default',
-       'Does not meet the credit policy. Status:Fully Paid',
-       'Does not meet the credit policy. Status:Charged Off'],
-      dtype=object)"""
-
 #counting number of customers late on their payments. I have included those who are in their Grace Period here as they've still missed a payment
 late_customers = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Late | Grace')]
 
@@ -561,16 +533,6 @@ overall_revenue_proportion #13.32%
 # % of overall revenue that late/charged off and default customers present (potential loss as % of total revenue)
 loss_choff_late_default = (loss_from_default + potential_loss_late_charged_off) / transformed_loan_payments['loan_amount_incl_int_rate'].sum() * 100
 loss_choff_late_default #6.02%
-
-
-#finding the unique values in loan status
-unique_loan_status = transformed_loan_payments['loan_status'].unique()
-unique_loan_status
-"""['Current', 'Fully Paid', 'Charged Off', 'Late (31-120 days)',
-       'In Grace Period', 'Late (16-30 days)', 'Default',
-       'Does not meet the credit policy. Status:Fully Paid',
-       'Does not meet the credit policy. Status:Charged Off'],
-      dtype=object)"""
 
 #counting number of customers late on their payments. I have included those who are in their Grace Period here as they've still missed a payment
 late_customers = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Late | Grace')]
@@ -624,29 +586,9 @@ loss_choff_late_default #6.02%
 dfs_for_indicator_subset = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Late | Grace | Charged Off | Default')]
 indicator_subset = dfs_for_indicator_subset
 
-
 #changing str value columns to number codes
-indicator_subset['loan_status'] = pd.Categorical(indicator_subset['loan_status']).codes
-
-indicator_subset['home_ownership'] = pd.Categorical(indicator_subset['home_ownership']).codes
-
-indicator_subset['grade'] = pd.Categorical(indicator_subset['grade']).codes
-
-indicator_subset['last_payment_date'] = pd.Categorical(indicator_subset['last_payment_date']).codes
-
-indicator_subset['next_payment_date'] = pd.Categorical(indicator_subset['next_payment_date']).codes
-
-indicator_subset['earliest_credit_line'] = pd.Categorical(indicator_subset['earliest_credit_line']).codes
-
-indicator_subset['employment_length'] = pd.Categorical(indicator_subset['employment_length']).codes
-
-indicator_subset['verification_status'] = pd.Categorical(indicator_subset['verification_status']).codes
-
-indicator_subset['issue_date'] = pd.Categorical(indicator_subset['issue_date']).codes
-
-indicator_subset['purpose'] = pd.Categorical(indicator_subset['purpose']).codes
-
-
+for column in indicator_subset.select_dtypes(['object']):
+    indicator_subset[column] = indicator_subset[column].factorize()[0]
 
 #chosen variables to check 
 corr_indicator_subset = indicator_subset[['loan_amount', 'term', 'int_rate', 'instalment', 'annual_inc', 'dti', 'loan_status', 'home_ownership', 'purpose', 'total_payment', 'last_payment_date', 'next_payment_date', 'earliest_credit_line', 'total_accounts', 'open_accounts', 'mths_since_last_delinq', 'delinq_2yrs']]
@@ -683,26 +625,8 @@ sns.lmplot(x="loan_status", y="annual_inc", data=scatter_annual_inc, line_kws={'
 loan_status_co_indicator_subset = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Charged Off')]
 co_indicator_subset = loan_status_co_indicator_subset
 
-co_indicator_subset['loan_status'] = pd.Categorical(co_indicator_subset['loan_status']).codes
-
-co_indicator_subset['home_ownership'] = pd.Categorical(co_indicator_subset['home_ownership']).codes
-
-co_indicator_subset['grade'] = pd.Categorical(co_indicator_subset['grade']).codes
-
-co_indicator_subset['last_payment_date'] = pd.Categorical(co_indicator_subset['last_payment_date']).codes
-
-co_indicator_subset['next_payment_date'] = pd.Categorical(co_indicator_subset['next_payment_date']).codes
-
-co_indicator_subset['earliest_credit_line'] = pd.Categorical(co_indicator_subset['earliest_credit_line']).codes
-
-co_indicator_subset['employment_length'] = pd.Categorical(co_indicator_subset['employment_length']).codes
-
-co_indicator_subset['verification_status'] = pd.Categorical(co_indicator_subset['verification_status']).codes
-
-co_indicator_subset['issue_date'] = pd.Categorical(co_indicator_subset['issue_date']).codes
-
-co_indicator_subset['purpose'] = pd.Categorical(co_indicator_subset['purpose']).codes
-
+for column in co_indicator_subset.select_dtypes(['object']):
+    co_indicator_subset[column] = co_indicator_subset[column].factorize()[0]
 
 #chosen variables to check 
 corr_co_indicator_subset = co_indicator_subset[['loan_amount', 'term', 'int_rate', 'instalment', 'annual_inc', 'dti', 'loan_status', 'home_ownership', 'purpose', 'total_payment', 'last_payment_date', 'next_payment_date', 'earliest_credit_line', 'total_accounts', 'open_accounts', 'mths_since_last_delinq', 'delinq_2yrs']]
@@ -734,26 +658,8 @@ sns.lmplot(x="loan_status", y="term", data=scatter_term, line_kws={'color': 'gre
 loan_status_late_indicator_subset = transformed_loan_payments[transformed_loan_payments['loan_status'].str.contains('Late | Grace')]
 late_indicator_subset = loan_status_late_indicator_subset
 
-late_indicator_subset['loan_status'] = pd.Categorical(late_indicator_subset['loan_status']).codes
-
-late_indicator_subset['home_ownership'] = pd.Categorical(late_indicator_subset['home_ownership']).codes
-
-late_indicator_subset['grade'] = pd.Categorical(late_indicator_subset['grade']).codes
-
-late_indicator_subset['last_payment_date'] = pd.Categorical(late_indicator_subset['last_payment_date']).codes
-
-late_indicator_subset['next_payment_date'] = pd.Categorical(late_indicator_subset['next_payment_date']).codes
-
-late_indicator_subset['earliest_credit_line'] = pd.Categorical(late_indicator_subset['earliest_credit_line']).codes
-
-late_indicator_subset['employment_length'] = pd.Categorical(late_indicator_subset['employment_length']).codes
-
-late_indicator_subset['verification_status'] = pd.Categorical(late_indicator_subset['verification_status']).codes
-
-late_indicator_subset['issue_date'] = pd.Categorical(late_indicator_subset['issue_date']).codes
-
-late_indicator_subset['purpose'] = pd.Categorical(late_indicator_subset['purpose']).codes
-
+for column in late_indicator_subset.select_dtypes(['object']):
+    late_indicator_subset[column] = late_indicator_subset[column].factorize()[0]
 
 #chosen variables to check 
 corr_late_indicator_subset = late_indicator_subset[['loan_amount', 'term', 'int_rate', 'instalment', 'annual_inc', 'dti', 'loan_status', 'home_ownership', 'purpose', 'total_payment', 'last_payment_date', 'next_payment_date', 'earliest_credit_line', 'total_accounts', 'open_accounts', 'mths_since_last_delinq', 'delinq_2yrs']]
