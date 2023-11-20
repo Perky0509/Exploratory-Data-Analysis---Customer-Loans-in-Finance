@@ -69,12 +69,6 @@ This boxcox transformation visual shows the effect of imputing the annual income
 
 
 
-While this shows the corrected distribution, once outliers had been removed, for 'total payment'.
-
-<img width="503" alt="Screenshot 2023-11-10 at 23 32 30" src="https://github.com/Perky0509/Exploratory-Data-Analysis---Customer-Loans-in-Finance/assets/145782195/5a824c83-43b8-4de3-942e-ebfb3c2780f3">
-
-
-
 
 
 ### Current Loan Status
