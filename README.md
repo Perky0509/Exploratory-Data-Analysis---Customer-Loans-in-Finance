@@ -9,7 +9,7 @@
 - (Visualisations) - Current Loan Status
 - (Visualisations) - Loss and Potential Loss
 - (Visualisations) - Indicators of Loss
-- License Information
+- ### License Information
 
 ## Project Description
  - This project is all about performing experimental data analysis on a data table extracted from a database stored in AWS RDS. 
