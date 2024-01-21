@@ -1,6 +1,5 @@
 # Exploratory Data Analysis - Customer Loans in Finance 
 
-[TOC]
 ## Table of Contents
 [Project Description](#desc)
 
@@ -8,11 +7,11 @@
 
 [Usage Instructions](#usage) 
 
-[File Structure](markdown-header-file-structure)
+[File Structure](#struct)
 
-[Visualisations](markdown-header-visualisations)
+[Visualisations](#vis)
 
-[License Information](markdown-header-license-information)
+[License Information](#license)
 
 <a name="desc"></a>
 ## Project Description
@@ -37,9 +36,11 @@ There are several py libraries that will need to be installed in order to run th
 ## Usage instructions
 I have removed all references to print() other than in areas necessary to extract and update the original dataframe and its subsets in order to avoid an overwhelming amount of simultaneous output and confusion. Therefore to see results of analysis and visualisations these will need to be added by the user.
 
+<a name="struct"></a>
 ## File Structure of the Project
 For this project there is an overall project file, with all the code laid out in one document. Then there are individual files, one per task, to hone in on different data processing, cleaning and analytical elements
 
+<a name="vis"></a>
 ## Visualisations
 In order to see an initial overview of the analysis in this project here is a collection of visualisations to look out without needing to run the code. 
 
@@ -104,6 +105,6 @@ This lmplot example shows that for 'potentially charged off' customers (ie those
 
 <img width="283" alt="Screenshot 2023-11-18 at 22 03 17" src="https://github.com/Perky0509/Exploratory-Data-Analysis---Customer-Loans-in-Finance/assets/145782195/d332803c-e6d4-47c0-86e2-31b1f36f7b77">
 
-
+<a name="license"></a>
 ## License information
 MIT 
