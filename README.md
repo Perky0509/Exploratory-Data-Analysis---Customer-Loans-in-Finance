@@ -1,11 +1,12 @@
 # Exploratory Data Analysis - Customer Loans in Finance 
 
+[TOC]
 ## Table of Contents
-[Project Description](markdown-header-project-description)
+[Project Description](#desc)
 
-[Installation Instructions](markdown-header-installation-instructions)
+[Installation Instructions](#install)
 
-[Usage Instructions](markdown-header-usage-instructions) 
+[Usage Instructions](#usage) 
 
 [File Structure](markdown-header-file-structure)
 
@@ -13,10 +14,12 @@
 
 [License Information](markdown-header-license-information)
 
+<a name="desc"></a>
 ## Project Description
  - This project is all about performing experimental data analysis on a data table extracted from a database stored in AWS RDS. 
  - There were many learnings from doing this project. It required me to put into practise a wide range of knowledge and skills picked up so far on the AiCore Data Science course. It was also great to see how, using code, tabular data can be manipulated to find all sorts of information, and transformed into easily digestible plots to help everyone understand what the data is saying.  
 
+<a name="install"></a>
 ## Installation Instructions
 There are several py libraries that will need to be installed in order to run the code in this repo:
 - SQLAlchemy
@@ -30,7 +33,7 @@ There are several py libraries that will need to be installed in order to run th
 - Sklearn
 - Seaborn
 
-
+<a name="usage"></a>
 ## Usage instructions
 I have removed all references to print() other than in areas necessary to extract and update the original dataframe and its subsets in order to avoid an overwhelming amount of simultaneous output and confusion. Therefore to see results of analysis and visualisations these will need to be added by the user.
 
