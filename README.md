@@ -1,12 +1,17 @@
 # Exploratory Data Analysis - Customer Loans in Finance 
 
 ## Table of Contents
-Project Description
-Installation Instructions
-Usage Instructions 
-File Structure
-Visualisations
-License Information
+[Project Description](markdown-header-project-description)
+
+[Installation Instructions](markdown-header-installation-instructions)
+
+[Usage Instructions](markdown-header-usage-instructions) 
+
+[File Structure](markdown-header-file-structure)
+
+[Visualisations](markdown-header-visualisations)
+
+[License Information](markdown-header-license-information)
 
 ## Project Description
  - This project is all about performing experimental data analysis on a data table extracted from a database stored in AWS RDS. 
